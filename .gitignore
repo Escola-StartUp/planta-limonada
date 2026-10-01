@@ -1,0 +1,8 @@
+# arquivos temporarios dos scripts de captura headless
+__cap.html
+__cons.html
+
+# sistema operacional / editores
+.DS_Store
+Thumbs.db
+*.swp
