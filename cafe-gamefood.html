@@ -163,6 +163,7 @@ const M={
  white:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.45}),
  rubber:new THREE.MeshStandardMaterial({color:0x151517,roughness:.95}),
  blue:new THREE.MeshStandardMaterial({color:0x1d3f6e,roughness:.7}),
+ screen:new THREE.MeshBasicMaterial({color:0x9fc0e8,toneMapped:false}),   // tela de PC acesa
  purple:new THREE.MeshStandardMaterial({color:P.purple,roughness:.8,emissive:P.purple,emissiveIntensity:.22}),
  panel:new THREE.MeshStandardMaterial({color:0x17171b,roughness:.85}),
  wood:new THREE.MeshStandardMaterial({color:0xb98a55,roughness:.7}),
@@ -294,9 +295,48 @@ function drawTv(g,W,H){
 const bannerC=cv(1400,360,drawBanner), tvC=cv(1100,700,drawTv);
 const bannerMat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(bannerC),toneMapped:false});
 const tvMat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(tvC),toneMapped:false});
+
+/* ---- INSCRIÇÕES DAS PLACAS (arena e estandes) ----
+   Texto desenhado em canvas, com quebra de linha e corpo reduzido até caber
+   na placa. Assim nenhum nome precisa ser aparado ou esticado.             */
+const FONTREDRAW=[];
+function signTex(lines,wPx,hPx,bg){
+  const c=document.createElement('canvas');c.width=wPx;c.height=hPx;
+  const g=c.getContext('2d');
+  const draw=()=>{
+    g.clearRect(0,0,wPx,hPx);
+    if(bg){g.fillStyle=bg;g.fillRect(0,0,wPx,hPx)}
+    g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';
+    let size=Math.round(hPx*.5);g.font=`800 ${size}px Montserrat,Poppins,sans-serif`;
+    const maxW=wPx*.9,out=[];
+    for(const raw of lines){
+      let cur='';
+      for(const w of raw.split(' ')){
+        const t=cur?cur+' '+w:w;
+        if(cur&&g.measureText(t).width>maxW){out.push(cur);cur=w}else cur=t}
+      out.push(cur)}
+    let lh;                                   /* reduz o corpo até caber na altura */
+    for(;;){g.font=`800 ${size}px Montserrat,Poppins,sans-serif`;lh=size*1.18;
+      if(out.length*lh<=hPx*.9||size<=9)break;size-=2}
+    const y0=hPx/2-(out.length-1)*lh/2;
+    out.forEach((t,i)=>g.fillText(t,wPx/2,y0+i*lh))};
+  draw();
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Q.aniso;
+  return {t,redraw:draw}}
+/* plano de inscrição virado para -x, a mesma direção dos painéis dos
+   estandes (que apontam para a quadra).                                */
+function placa(lines,w,h,x,y,z,par,bg){
+  const {t,redraw}=signTex(lines,Math.round(w*320),Math.round(h*320),bg);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+    new THREE.MeshBasicMaterial({map:t,transparent:true,alphaTest:.01,toneMapped:false,side:THREE.DoubleSide}));
+  m.position.set(x,y,z);m.rotation.y=-Math.PI/2;par.add(m);
+  FONTREDRAW.push(()=>{redraw();t.needsUpdate=true});
+  return m}
+
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{
   drawBanner(bannerC.getContext('2d'),1400,360);drawTv(tvC.getContext('2d'),1100,700);
-  bannerMat.map.needsUpdate=true;tvMat.map.needsUpdate=true});
+  bannerMat.map.needsUpdate=true;tvMat.map.needsUpdate=true;
+  FONTREDRAW.forEach(f=>f())});   // refaz as inscrições com a fonte Montserrat
 
 /* ================= PISO ================= */
 const fw=G.x1-G.x0, fd=G.z1-G.z0, fcx=(G.x0+G.x1)/2, fcz=(G.z0+G.z1)/2;
@@ -567,9 +607,9 @@ scene.add(cafeZone);
     [[-.7,-1.2],[.7,-1.2],[-.7,1.2],[.7,1.2]].forEach(([lx,lz])=>{cyl(.023,.88,M.inox,lx,.44,lz,t,8);cyl(.04,.05,M.rubber,lx,.025,lz,t,10)});
     box(.5,.02,.34,M.wood,-.3,.96,0,t);cyl(.1,.1,M.inox,.5,.98,-.5,t,16);cyl(.1,.1,M.inox,.5,.98,.5,t,16);
     t.position.set(13.2,0,dz);k.add(t)});
-  /* placa Escola Startup (voltada para a quadra, -x) */
+  /* placa da arena (voltada para a quadra, -x): inscrição no lugar do logo */
   box(.09,1.15,3.2,M.purple,16.3,2.75,-2.6,k);
-  logoMesh(P.logoSt,2.7,k,0.06,-Math.PI/2).position.set(16.3,2.75,-2.6);
+  placa(['Arena Gastronômica'],2.9,.86,16.24,2.75,-2.6,k);
   box(.06,2.4,.06,M.steel,16.3,1.45,-4.1,k);box(.06,2.4,.06,M.steel,16.3,1.45,-1.1,k);
   /* painel patrocinador Rede Calabria na frente (-x) */
   box(.06,.9,2.8,M.purple,9.85,1.05,-2.6,k);
@@ -579,21 +619,49 @@ scene.add(cafeZone);
 addCol(15.55,17.0,-6.3,1.0);              // bancada de fundo
 addCol(12.3,14.1,-5.7,.7);             // ilhas de preparo
 
-/* ================= ESTANDES EM "L" (pequenos, contra as paredes) ================= */
+/* ================= ESTANDES EM "L" (pequenos, contra as paredes) =================
+   Numeração dos 9 estandes, contados a partir do primeiro depois da arena
+   gastronômica (arena vai de z=-6,6 a z=1,4 na lateral, e o primeiro estande
+   lateral fica em z=2,6). A ordem desce pela fileira lateral e continua na
+   fileira do fundo da quadra.                                              */
+const STAND_NAMES=['Curso de Gastronomia','Curso de Programação Web','Construindo Futuros',
+  'Curso de Panificação e Confeitaria','Curso Assistente Administrativo','Curso de Mecânica',
+  'Curso de Marcenaria','Trabalho Educativo'];
+/* um PC completo em cima do balcão (usado só no estande da Escola StartUp) */
+function pcStation(par,z){
+  box(.2,.02,.26,M.black,-.16,.86,z,par);                       // base
+  box(.05,.15,.05,M.black,-.16,.945,z,par);                     // haste
+  box(.04,.36,.6,M.panel,-.12,1.09,z,par);                      // corpo
+  box(.012,.31,.55,M.screen,-.146,1.09,z,par);                  // tela (voltada para a quadra)
+  box(.17,.42,.4,M.appliance,.06,1.06,z,par);                   // torre
+  box(.13,.016,.44,M.black,-.31,.858,z,par);                    // teclado
+  box(.05,.02,.08,M.black,-.31,.868,z+.31,par)}                 // mouse
 {const cols=[0x2f6fb0,0xb03a3a,0x2f8a5a,0x8a5a2f,0x5a3f9a,0x2f7f9a,0xa03f7a,0x8a8a2f,0x3f8a5a];
- const stand=(x,z,rot,c)=>{const g=new THREE.Group();
-   box(.85,.8,1.95,M.panel,0,.4,0,g);
-   box(.95,.05,2.05,M.lam,0,.825,0,g);
-   box(.06,1.85,1.95,M.panel,.4,.925,0,g);
-   box(.04,.4,1.75,new THREE.MeshStandardMaterial({color:c,roughness:.6,emissive:c,emissiveIntensity:.2}),.36,1.6,0,g);
-   box(.035,.045,1.75,M.steel,.345,1.38,0,g);
-   box(.24,.18,.24,M.wood,-.09,.95,-.55,g);box(.18,.2,.18,M.white,-.05,.99,.1,g);
-   cyl(.15,.035,M.steel,-.04,.86,.65,g,16);
+ const stand=(x,z,rot,c,W,idx)=>{const g=new THREE.Group();
+   box(.85,.8,W,M.panel,0,.4,0,g);
+   box(.95,.05,W+.1,M.lam,0,.825,0,g);
+   box(.06,1.85,W,M.panel,.4,.925,0,g);
+   box(.04,.4,W-.2,new THREE.MeshStandardMaterial({color:c,roughness:.6,emissive:c,emissiveIntensity:.2}),.36,1.6,0,g);
+   box(.035,.045,W-.2,M.steel,.345,1.38,0,g);
+   if(idx===0){
+     /* estande 1: logo da Escola StartUp + Food Makers e Game Forge abaixo.
+        Só a largura muda (para caber 3 PCs); altura e balcão continuam os
+        mesmos dos outros estandes, mantendo a escala da fileira.
+        A marca vai na frente do balcão (fundo escuro) porque o logo é claro
+        e os monitores cobririam a faixa da placa.                        */
+     logoMesh(P.logoSt,1.05,g,.02,-Math.PI/2).position.set(-.427,.57,0);
+     placa(['Food Makers e Game Forge'],2.15,.26,-.427,.19,0,g);
+     [-.8,0,.8].forEach(dz=>pcStation(g,dz));
+   }else{
+     placa([STAND_NAMES[idx-1]],W-.2,.34,.35,1.19,0,g);
+     /* os objetos ficam baixos e na beirada do balcão, para não cobrir a placa */
+     box(.24,.16,.24,M.wood,-.22,.9,-.55,g);box(.18,.12,.18,M.white,-.2,.93,.1,g);
+     cyl(.15,.035,M.steel,-.2,.845,.65,g,16);}
    g.position.set(x,0,z);g.rotation.y=rot;scene.add(g)};
- // 4 estandes na lateral do ginásio, recuados da parede
- for(let i=0;i<P.STANDS.lat;i++)stand(P.STANDS.latX,P.STANDS.latZ0+i*P.STANDS.latDx,0,cols[i]);
+ // 4 estandes na lateral do ginásio, recuados da parede (o 1o é o maior)
+ for(let i=0;i<P.STANDS.lat;i++)stand(P.STANDS.latX,P.STANDS.latZ0+i*P.STANDS.latDx,0,cols[i],i===0?2.4:1.95,i);
  // restante no fundo da quadra, recuado da parede (substitui a arquibancada)
- for(let i=0;i<P.STANDS.end;i++)stand(P.STANDS.endX0+i*P.STANDS.endDx,P.STANDS.endZ,-Math.PI/2,cols[4+i]);
+ for(let i=0;i<P.STANDS.end;i++)stand(P.STANDS.endX0+i*P.STANDS.endDx,P.STANDS.endZ,-Math.PI/2,cols[4+i],1.95,4+i);
  addCol(P.STANDS.latX-.6,P.STANDS.latX+.6,P.STANDS.latZ0-1.2,P.STANDS.latZ0+(P.STANDS.lat-1)*P.STANDS.latDx+1.2);
  addCol(P.STANDS.endX0-1.2,P.STANDS.endX0+(P.STANDS.end-1)*P.STANDS.endDx+1.2,P.STANDS.endZ-.6,P.STANDS.endZ+.6)}
 
