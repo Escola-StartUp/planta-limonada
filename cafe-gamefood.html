@@ -1,29 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0b10">
 <title>Café Gamefood · Limonada 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
-html,body{margin:0;height:100%;background:#0b0b10;overflow:hidden;font-family:Montserrat,system-ui,sans-serif;color:#fff;touch-action:none}
+html,body{margin:0;height:100%;background:#0b0b10;overflow:hidden;overscroll-behavior:none;font-family:Montserrat,system-ui,sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 canvas{display:block}
 #load{position:fixed;inset:0;background:#1a0933;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:9;transition:opacity .6s}
-#bar{width:260px;height:6px;background:#ffffff22;border-radius:9px;overflow:hidden}#bar i{display:block;height:100%;width:0;background:#b57cff}
+#bar{width:min(260px,60vw);height:6px;background:#ffffff22;border-radius:9px;overflow:hidden}#bar i{display:block;height:100%;width:0;background:#b57cff}
 #ui{position:fixed;left:12px;bottom:12px;display:flex;gap:6px;flex-wrap:wrap;z-index:5;max-width:calc(100% - 24px)}
-button{background:#2a0f4ecc;color:#fff;border:1px solid #ffffff33;border-radius:10px;padding:8px 12px;font:600 13px inherit;cursor:pointer;backdrop-filter:blur(6px)}
+button{background:#2a0f4ecc;color:#fff;border:1px solid #ffffff33;border-radius:10px;padding:8px 12px;font:600 13px inherit;cursor:pointer;backdrop-filter:blur(6px);touch-action:manipulation}
 button:hover,button.on{background:#6d2fc4}
 #help{position:fixed;top:12px;right:12px;width:270px;background:#12061fdd;border:1px solid #ffffff22;border-radius:14px;padding:14px 16px;font-size:12.5px;line-height:1.5;z-index:5}
 #help b{color:#c9a2ff}#help button{float:right;padding:2px 8px;margin:-6px -8px 0 0}
 #joy{position:fixed;left:24px;bottom:80px;width:110px;height:110px;border-radius:50%;background:#ffffff18;border:2px solid #ffffff44;display:none;z-index:6}
-#joy i{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:#b57cffcc}
+#joy i{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:#b57cffcc}
+
+/* ================= TOUCH / SMARTPHONE ================= */
+#mbar,#msheet{display:none}
+.k{display:inline}.t{display:none}
+@media (pointer:coarse){
+  /* barras de mouse somem: a navegação passa a ser 100% touch */
+  #ui{display:none}
+  .k{display:none}.t{display:inline}
+  button{backdrop-filter:none;box-shadow:0 2px 10px #0007}
+  /* painel de ajuda vira folha inferior, recolhida por padrão */
+  #help{display:none;top:auto;right:12px;left:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:auto;font-size:14px;line-height:1.6;padding:16px 18px;background:#12061ff5}
+  #help button{padding:6px 12px;font-size:18px;margin:-8px -6px 0 0}
+  /* barra de ações fixa no rodapé */
+  #mbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:stretch;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,#0b0b1000,#0b0b10dd);z-index:6}
+  #mbar button{min-width:38px;min-height:50px;font-size:14px;padding:10px 4px;border-radius:12px;flex:1 1 0}
+  #mzoom{display:flex;gap:8px;flex:1.4 1 0}
+  #mbar #mviews{flex:2 1 0}
+  #mbar #mhelp{flex:0 0 54px;font-size:17px}
+  /* folha de vistas (rolável em telas baixas) */
+  #msheet{position:fixed;left:0;right:0;bottom:calc(74px + env(safe-area-inset-bottom,0px));flex-direction:column;gap:8px;padding:12px 10px;background:#12061ff2;border-top:1px solid #ffffff22;z-index:7;max-height:min(62vh,430px);overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+  #msheet.open{display:flex}
+  #msheet button{min-height:48px;font-size:14px;border-radius:12px}
+  /* joystick maior, acima da barra */
+  #joy{left:20px;bottom:calc(96px + env(safe-area-inset-bottom,0px));width:126px;height:126px}
+}
+@media (pointer:coarse) and (max-height:560px){
+  #joy{width:104px;height:104px;bottom:calc(82px + env(safe-area-inset-bottom,0px))}
+  #msheet{bottom:calc(62px + env(safe-area-inset-bottom,0px));padding:8px 10px;gap:6px}
+  #msheet button{min-height:40px;font-size:13px}
+  #mbar button{min-height:44px}
+  #help{bottom:calc(66px + env(safe-area-inset-bottom,0px));font-size:13px;line-height:1.5;padding:12px 14px}
+}
 </style></head><body>
 <div id="load"><div style="font-weight:700;font-size:22px">Café Gamefood</div><div id="bar"><i></i></div><small>Carregando cena…</small></div>
-<div id="help"><button onclick="this.parentNode.remove()">×</button><b>Controles</b><br>
-<b>Orbital:</b> arraste = girar · botão direito/2 dedos = pan · roda/pinça = zoom<br>
-<b>Caminhada (C):</b> WASD/setas · Shift corre · arraste ou clique p/ olhar (Esc sai) · joystick no toque<br>
-<b>Vistas:</b> botões na barra inferior ou <b>1</b>…<b>6</b></div>
+<div id="help"><button onclick="tgHelp()">×</button><b>Controles</b><br>
+<span class="k"><b>Orbital:</b> arraste = girar · botão direito/2 dedos = pan · roda/pinça = zoom<br></span>
+<span class="t"><b>Orbital:</b> 1 dedo = girar · 2 dedos = zoom e pan · botões +/− = zoom<br></span>
+<span class="k"><b>Caminhada (C):</b> WASD/setas · Shift corre · arraste ou clique p/ olhar (Esc sai) · joystick no toque<br></span>
+<span class="t"><b>Caminhada:</b> joystick = andar · arraste na tela p/ olhar · botão <b>Correr</b> aumenta a velocidade · botão <b>Modo</b> volta ao orbital<br></span>
+<span class="k"><b>Vistas:</b> botões na barra inferior ou <b>1</b>…<b>7</b></span>
+<span class="t"><b>Vistas:</b> toque em <b>Vistas</b> no rodapé</span></div>
 <div id="ui"></div><div id="joy"><i></i></div>
+<div id="mbar">
+  <button id="mmode">Modo</button>
+  <button id="mrun">Correr</button>
+  <span id="mzoom"><button id="mout">+</button><button id="min">−</button></span>
+  <button id="mviews">Vistas</button>
+  <button id="mhelp">?</button>
+</div>
+<div id="msheet"></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -51,11 +96,25 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const _qs=new URLSearchParams(location.search);
 const STILL=parseInt(_qs.get('still'))||0;let frames=0;   // ?still=N limita os quadros (captura de tela)
 
+/* ================= PERFIL DE DISPOSITIVO =================
+   COARSE = true em smartphones/tablets (interface touch é usada no lugar da
+   de desktop). Só nesse perfil as otimizações mobile são aplicadas, mantendo a
+   renderização de desktop intacta.
+
+   Medido no perfil mobile (three.js r160): o espelho real do piso redesenha
+   a cena inteira mais um passe por quadro e sozinho custava ~2,7x de FPS
+   (12,8 -> 34,8 fps); o shadow map da cena estática, redesenhado a cada
+   quadro, custava mais ~6%. São os dois maiores custos do renderizador.   */
+const COARSE=matchMedia('(pointer:coarse)').matches;
+const Q=COARSE?{pr:1.25,shadow:512,mirror:false,std:true,aniso:2,wood:512,brushed:128}
+              :{pr:1.75,shadow:1024,mirror:true,std:false,aniso:8,wood:1024,brushed:256};
+
 /* ================= CENA / RENDERER ================= */
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:!!STILL});
-let pr=Math.min(devicePixelRatio,1.75);renderer.setPixelRatio(pr);renderer.setSize(innerWidth,innerHeight);
+const renderer=new THREE.WebGLRenderer({antialias:!COARSE,powerPreference:'high-performance',preserveDrawingBuffer:!!STILL});
+let pr=Math.min(devicePixelRatio,Q.pr);renderer.setPixelRatio(pr);renderer.setSize(innerWidth,innerHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
-renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=COARSE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
 document.body.prepend(renderer.domElement);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0a0e);scene.fog=new THREE.Fog(0x0a0a0e,60,135);
 const cam=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,240);
@@ -66,8 +125,8 @@ const cam=new THREE.PerspectiveCamera(52,innerWidth/innerHeight,.1,240);
 
 /* ================= TEXTURAS PROCEDURAIS ================= */
 function cv(w,h,f){const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);return c}
-function tex(c,rep,srgb){const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);t.anisotropy=8;if(srgb)t.colorSpace=THREE.SRGBColorSpace;return t}
-const woodC=cv(1024,1024,(g,w,h)=>{
+function tex(c,rep,srgb){const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);t.anisotropy=Q.aniso;if(srgb)t.colorSpace=THREE.SRGBColorSpace;return t}
+const woodC=cv(Q.wood,Q.wood,(g,w,h)=>{
   g.fillStyle='#b5854f';g.fillRect(0,0,w,h);
   const rows=16,ph=h/rows;
   for(let r=0;r<rows;r++){const y=r*ph,base=rnd(-16,16);
@@ -80,7 +139,7 @@ const woodC=cv(1024,1024,(g,w,h)=>{
     g.fillRect(rnd(0,w),y,1.6,ph)}});
 const weave=cv(128,128,(g,w,h)=>{for(let y=0;y<h;y+=4)for(let x=0;x<w;x+=4){g.fillStyle=((x+y)/4)%2?'#999':'#666';g.fillRect(x,y,4,4)}});
 const folds=cv(512,64,(g,w,h)=>{for(let x=0;x<w;x++){const v=128+100*Math.sin(x/w*Math.PI*2*28)*Math.cos(x*.07);g.fillStyle=`rgb(${v},${v},${v})`;g.fillRect(x,0,1,h)}});
-const brushed=cv(256,256,(g,w,h)=>{g.fillStyle='#999';g.fillRect(0,0,w,h);for(let i=0;i<1500;i++){const v=rnd(110,190)|0;g.strokeStyle=`rgb(${v},${v},${v})`;g.beginPath();const y=rnd(0,h);g.moveTo(0,y);g.lineTo(w,y+rnd(-1,1));g.stroke()}});
+const brushed=cv(Q.brushed,Q.brushed,(g,w,h)=>{g.fillStyle='#999';g.fillRect(0,0,w,h);for(let i=0;i<1500;i++){const v=rnd(110,190)|0;g.strokeStyle=`rgb(${v},${v},${v})`;g.beginPath();const y=rnd(0,h);g.moveTo(0,y);g.lineTo(w,y+rnd(-1,1));g.stroke()}});
 const netGrid=cv(64,64,(g)=>{g.clearRect(0,0,64,64);g.strokeStyle='rgba(255,255,255,.95)';g.lineWidth=2.5;g.strokeRect(0,0,64,64);for(let i=16;i<64;i+=16){g.beginPath();g.moveTo(i,0);g.lineTo(i,64);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(64,i);g.stroke()}});
 const floorTex=tex(woodC,[8.75,10.25],true),clothB=tex(weave,[8,8]),curtB=tex(folds,[6,1]),inoxB=tex(brushed,[2,2]);
 const netBase=new THREE.CanvasTexture(netGrid);netBase.wrapS=netBase.wrapT=THREE.RepeatWrapping;
@@ -112,6 +171,21 @@ const M={
  glass:new THREE.MeshPhysicalMaterial({color:0xbcd8f2,roughness:.15,metalness:0,transparent:true,opacity:.5,envMapIntensity:1.4,clearcoat:.6}),
  line:y=>new THREE.MeshStandardMaterial({color:y,roughness:.35,transparent:true,opacity:.92}),
  net:()=>new THREE.MeshStandardMaterial({map:netBase.clone(),transparent:true,alphaTest:.04,side:THREE.DoubleSide,color:0xffffff,roughness:.9})};
+/* No celular os 4 materiais com clearcoat viram MeshStandardMaterial: o shader
+   fica bem menor (menos tempo compilando na carga) e o custo por pixel cai,
+   já que o piso e as bancadas ocupam quase a tela inteira. O piso sem espelho
+   (abaixo) ganha roughness baixa + envMap forte para continuar brilhante.
+   Precisa acontecer aqui, antes de qualquer mesh usar estes materiais.      */
+if(COARSE&&Q.std){
+ M.floor.dispose();
+ M.floor=new THREE.MeshStandardMaterial({map:floorTex,color:0xffffff,roughness:.34,metalness:0,envMapIntensity:1.15});
+ M.lam.dispose();
+ M.lam=new THREE.MeshStandardMaterial({color:P.top,roughness:.3,metalness:0});
+ M.plastic.dispose();
+ M.plastic=new THREE.MeshStandardMaterial({color:0xf6f6f4,roughness:.38,metalness:0});
+ M.glass.dispose();
+ M.glass=new THREE.MeshStandardMaterial({color:0xbcd8f2,roughness:.15,metalness:0,transparent:true,opacity:.5,envMapIntensity:1.4});
+}
 
 /* ================= HELPERS ================= */
 const colliders=[];
@@ -173,7 +247,7 @@ function logoMesh(url,w,par,zOff=.02,ry=0){
   for(let i=0;i<uv.count;i++)uv.setXY(i,u0+uv.getX(i)*(u1-u0),v0+uv.getY(i)*(v1-v0));
   const m=new THREE.Mesh(geo,mat);m.position.z=zOff;g.add(m);g.rotation.y=ry;
   new THREE.TextureLoader().load(url,t=>{
-    t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;mat.map=t;mat.needsUpdate=true;prog();
+    t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Q.aniso;mat.map=t;mat.needsUpdate=true;prog();
   },undefined,()=>{
     mat.map=new THREE.CanvasTexture(cv(512,160,(c)=>{c.fillStyle='#fff';c.font='700 62px Montserrat,sans-serif';c.textAlign='center';c.fillText(url===P.logoCal?'Rede Calábria':'Escola Startup',256,95)}));
     mat.needsUpdate=true;prog()});
@@ -226,8 +300,13 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{
 
 /* ================= PISO ================= */
 const fw=G.x1-G.x0, fd=G.z1-G.z0, fcx=(G.x0+G.x1)/2, fcz=(G.z0+G.z1)/2;
-const mirror=new Reflector(new THREE.PlaneGeometry(fw,fd),{textureWidth:512,textureHeight:512,color:0x9aa0a8});
-mirror.rotation.x=-Math.PI/2;mirror.position.set(fcx,-.004,fcz);scene.add(mirror);
+/* O Reflector é o item mais caro da cena: a cada quadro ele redesenha o
+   ginásio inteiro num render target extra. No celular ele nem é criado — o
+   piso opaco com envMap (M.floor acima) dá o brilho sem esse segundo passe. */
+if(Q.mirror){
+  const mirror=new Reflector(new THREE.PlaneGeometry(fw,fd),{textureWidth:512,textureHeight:512,color:0x9aa0a8});
+  mirror.rotation.x=-Math.PI/2;mirror.position.set(fcx,-.004,fcz);scene.add(mirror);
+}
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(fw,fd),M.floor);
 floor.rotation.x=-Math.PI/2;floor.position.set(fcx,0,fcz);floor.receiveShadow=true;scene.add(floor);
 
@@ -547,8 +626,8 @@ for(let i=0;i<3;i++)for(let j=0;j<2;j++){
   const x=CX-HWS*.8+HWS*.8*i, z=CZ-HL*.8+HL*.8*j;
   const s=new THREE.SpotLight((i+j)%2?0xe6eeff:0xfff2e0,95,32,1.15,1,1.1);
   s.position.set(x,9.6,z);s.target.position.set(x,0,z);
-  s.castShadow=(i===1&&j===0)||(i===0&&j===1);
-  s.shadow.mapSize.set(1024,1024);s.shadow.bias=-.0006;s.shadow.radius=4;
+  s.castShadow=COARSE?i===1&&j===0:(i===1&&j===0)||(i===0&&j===1);
+  s.shadow.mapSize.set(Q.shadow,Q.shadow);s.shadow.bias=-.0006;s.shadow.radius=4;
   scene.add(s,s.target)}
 {const s=new THREE.SpotLight(0xc9a2ff,95,20,1,.9,1.2);   // realce roxo no café
  s.position.set(11,5.4,-13);s.target.position.set(16,1.6,-13);scene.add(s,s.target)}
@@ -578,7 +657,7 @@ const _qv=_qs.get('v');
 setView(V[_qv]?_qv:'aerea');
 if(!free){O.t.copy(tg.t);O.th=tg.th;O.ph=tg.ph;O.r=tg.r}
 let mode='orbit';const W={p:new THREE.Vector3(0,1.7,-2),yaw:-Math.PI/2,pitch:0};
-const keys={},joy={x:0,y:0};let drag=null,pts=new Map(),pinch=0;
+const keys={},joy={x:0,y:0};let drag=null,pts=new Map(),pinch=0,mid={x:0,y:0},run=false;
 addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='KeyC')toggle();
   const n=parseInt(e.key);if(n>=1&&n<=7){if(mode!=='orbit')toggle();setView(VKEYS[n-1])}});
 addEventListener('keyup',e=>keys[e.code]=0);
@@ -588,51 +667,131 @@ cvEl.addEventListener('pointerdown',()=>{if(!free)return;
  const l=new THREE.Vector3(...free.l),off=new THREE.Vector3(...free.p).sub(l),r=off.length();
  O.t.copy(l);O.r=r;O.ph=Math.acos(THREE.MathUtils.clamp(off.y/r,-1,1));O.th=Math.atan2(off.x,off.z);
  tg.t.copy(l);tg.r=O.r;tg.ph=O.ph;tg.th=O.th;free=null});
-cvEl.addEventListener('pointerdown',e=>{pts.set(e.pointerId,e);drag={x:e.clientX,y:e.clientY,b:e.button};cvEl.setPointerCapture(e.pointerId);if(pts.size===2){const[a,b]=[...pts.values()];pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}});
-cvEl.addEventListener('pointerup',e=>{pts.delete(e.pointerId);drag=null});
+cvEl.addEventListener('pointerdown',e=>{pts.set(e.pointerId,e);drag={x:e.clientX,y:e.clientY,b:e.button};cvEl.setPointerCapture(e.pointerId);if(pts.size===2)pinchStart()});
+cvEl.addEventListener('pointerup',e=>{pts.delete(e.pointerId);drag=null;if(pts.size<2)pinch=0});
+cvEl.addEventListener('pointercancel',e=>{pts.delete(e.pointerId);drag=null;if(pts.size<2)pinch=0});
+function pinchStart(){const[a,b]=[...pts.values()];pinch=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);mid={x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2}}
+const clampR=r=>Math.max(2,Math.min(90,r));
+const isTouch=e=>e.pointerType==='touch';
+/* pan do alvo (orbital): usado pelo botão direito no desktop e por 2 dedos no touch */
+function pan(dx,dy){const s=O.r*.0016;
+  tg.t.x-=Math.cos(O.th)*dx*s;tg.t.z+=Math.sin(O.th)*dx*s;
+  tg.t.x-=Math.sin(O.th)*dy*s;tg.t.z-=Math.cos(O.th)*dy*s}
 cvEl.addEventListener('pointermove',e=>{
  if(document.pointerLockElement===cvEl&&mode==='walk'){W.yaw-=e.movementX*.0025;W.pitch=Math.max(-1.3,Math.min(1.3,W.pitch-e.movementY*.0025));return}
  if(pts.has(e.pointerId))pts.set(e.pointerId,e);
- if(pts.size===2){const[a,b]=[...pts.values()];const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);if(mode==='orbit')tg.r=clampR(tg.r*pinch/d);pinch=d;return}
+ if(pts.size===2){const[a,b]=[...pts.values()];
+  const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+  const mx=(a.clientX+b.clientX)/2,my=(a.clientY+b.clientY)/2;
+  if(mode==='orbit'&&pinch>0){tg.r=clampR(tg.r*pinch/d);
+   if(isTouch(a)||isTouch(b))pan(mx-mid.x,my-mid.y)}   // pinça=zoom, centro=mover
+  pinch=d;mid={x:mx,y:my};drag=null;return}
  if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
- if(mode==='walk'){W.yaw-=dx*.005;W.pitch=Math.max(-1.3,Math.min(1.3,W.pitch-dy*.005))}
- else if(drag.b===2){const s=O.r*.0016;tg.t.x-=Math.cos(O.th)*dx*s;tg.t.z+=Math.sin(O.th)*dx*s;tg.t.x-=Math.sin(O.th)*dy*s;tg.t.z-=Math.cos(O.th)*dy*s}
- else{tg.th-=dx*.006;tg.ph=Math.max(.08,Math.min(1.5,tg.ph-dy*.005))}});
-const clampR=r=>Math.max(2,Math.min(90,r));
+ const tc=isTouch(e)?1:0;                 // toque: passos maiores => menos sensibilidade
+ if(mode==='walk'){W.yaw-=dx*(.005+tc*.0008);W.pitch=Math.max(-1.3,Math.min(1.3,W.pitch-dy*(.005+tc*.0008)))}
+ else if(drag.b===2)pan(dx,dy);
+ else{tg.th-=dx*(.006-tc*.0015);tg.ph=Math.max(.08,Math.min(1.5,tg.ph-dy*(.005-tc*.0012)))}});
 cvEl.addEventListener('wheel',e=>{e.preventDefault();tg.r=clampR(tg.r*(1+Math.sign(e.deltaY)*.1))},{passive:false});
-cvEl.addEventListener('dblclick',()=>{if(mode==='walk')cvEl.requestPointerLock?.()});
-const jEl=document.getElementById('joy'),jk=jEl.firstElementChild;
-jEl.addEventListener('pointerdown',e=>{jEl.setPointerCapture(e.pointerId);jm(e)});jEl.addEventListener('pointermove',e=>{if(e.buttons)jm(e)});jEl.addEventListener('pointerup',()=>{joy.x=joy.y=0;jk.style.transform=''});
-function jm(e){const r=jEl.getBoundingClientRect();let x=(e.clientX-r.left-55)/45,y=(e.clientY-r.top-55)/45;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}joy.x=x;joy.y=y;jk.style.transform=`translate(${x*35}px,${y*35}px)`}
+cvEl.addEventListener('dblclick',()=>{if(mode==='walk'&&!COARSE)cvEl.requestPointerLock?.()});
+
+/* ---- JOYSTICK VIRTUAL (touch) ----
+   A geometria é medida do elemento, então o mesmo código serve para o
+   joystick de 110px do desktop e para o maior das telas de celular.        */
+const jEl=document.getElementById('joy'),jk=jEl.firstElementChild;let joyId=null;
+jEl.addEventListener('pointerdown',e=>{e.preventDefault();joyId=e.pointerId;jEl.setPointerCapture(e.pointerId);jm(e)});
+jEl.addEventListener('pointermove',e=>{if(e.pointerId===joyId)jm(e)});
+jEl.addEventListener('pointerup',jStop);jEl.addEventListener('pointercancel',jStop);
+function jStop(){joyId=null;joy.x=joy.y=0;jk.style.transform=''}
+function jm(e){const r=jEl.getBoundingClientRect(),R=r.width/2,K=Math.max(12,R-24);
+ let x=(e.clientX-r.left-R)/K,y=(e.clientY-r.top-R)/K;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
+ joy.x=x;joy.y=y;jk.style.transform=`translate(${x*K}px,${y*K}px)`}
+/* sem foco (app em background, telefonema) nada pode ficar "preso" pressionado */
+addEventListener('blur',()=>{for(const k in keys)keys[k]=0;jStop();pts.clear();pinch=0;drag=null});
+
+/* ---- BOTÕES: barra de desktop + rodapé de touch ---- */
 const ui=document.getElementById('ui');
-function btn(t,f){const b=document.createElement('button');b.textContent=t;b.onclick=()=>f(b);ui.appendChild(b);return b}
+function btn(t,f,par=ui){const b=document.createElement('button');b.textContent=t;b.onclick=()=>f(b);par.appendChild(b);return b}
+const VLIST=[['Visão geral','aerea'],['Quadra','quadra'],['Café','cafe'],['Palco de palestras','palco'],
+             ['Palco (trás)','palcotras'],['Arena gastronômica','arena'],['Estandes','estandes']];
+const goView=v=>()=>{if(mode!=='orbit')toggle();setView(v);closeSheet()};
 btn('Modo: Orbital/Caminhada (C)',()=>toggle());btn('+',()=>tg.r=clampR(tg.r*.8));btn('−',()=>tg.r=clampR(tg.r*1.25));
 btn('Resetar vista',()=>{if(mode!=='orbit')toggle();setView('aerea')});
-[['Visão geral','aerea'],['Quadra','quadra'],['Café','cafe'],['Palco de palestras','palco'],['Palco (trás)','palcotras'],['Arena gastronômica','arena'],['Estandes','estandes']]
- .forEach(([t,v])=>btn(t,()=>{if(mode!=='orbit')toggle();setView(v)}));
-function toggle(){mode=mode==='orbit'?'walk':'orbit';jEl.style.display=mode==='walk'&&matchMedia('(pointer:coarse)').matches?'block':'none';if(mode==='walk'){W.yaw=-Math.PI/2;W.pitch=0}else document.exitPointerLock?.()}
-addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+VLIST.forEach(([t,v])=>btn(t,goView(v)));
 
-/* ================= LOOP ================= */
+/* ================= INTERFACE TOUCH ================= */
+const helpEl=document.getElementById('help');
+window.tgHelp=()=>{helpEl.style.display=getComputedStyle(helpEl).display==='none'?'block':'none'};
+const mbar=document.getElementById('mbar'),modeB=document.getElementById('mmode'),
+      runB=document.getElementById('mrun'),zoom=document.getElementById('mzoom'),
+      vwB=document.getElementById('mviews'),sheet=document.getElementById('msheet');
+const closeSheet=()=>{sheet.classList.remove('open');vwB.classList.remove('on')};
+if(mbar){
+  modeB.onclick=()=>toggle();
+  runB.onclick=()=>{run=!run;runB.classList.toggle('on',run)};
+  document.getElementById('mout').onclick=()=>tg.r=clampR(tg.r*.8);
+  document.getElementById('min').onclick=()=>tg.r=clampR(tg.r*1.25);
+  vwB.onclick=()=>{const o=sheet.classList.toggle('open');vwB.classList.toggle('on',o)};
+  document.getElementById('mhelp').onclick=()=>tgHelp();
+  VLIST.forEach(([t,v])=>btn(t,goView(v),sheet));
+}
+function toggle(){mode=mode==='orbit'?'walk':'orbit';
+ jEl.style.display=mode==='walk'&&COARSE?'block':'none';
+ if(mode==='walk'){W.yaw=-Math.PI/2;W.pitch=0}
+ else{document.exitPointerLock?.();run=false;runB&&runB.classList.remove('on')}
+ syncUI()}
+/* o rodapé reflete o modo: zoom só no orbital, corrida só na caminhada */
+function syncUI(){if(modeB){modeB.textContent=mode==='walk'?'Orbital':'Modo';modeB.classList.toggle('on',mode==='walk')}
+ if(zoom)zoom.style.display=mode==='orbit'?'flex':'none';
+ if(runB)runB.style.display=mode==='walk'?'block':'none'}
+
+/* ---- REDIMENSIONAMENTO (inclui barra de URL do mobile e rotação) ---- */
+function syncSize(){const w=innerWidth,h=innerHeight;
+ cam.aspect=w/h;cam.updateProjectionMatrix();renderer.setPixelRatio(pr);renderer.setSize(w,h)}
+addEventListener('resize',syncSize);
+addEventListener('orientationchange',()=>setTimeout(syncSize,250));
+if(window.visualViewport)visualViewport.addEventListener('resize',syncSize);
+syncUI();   // estado inicial do rodapé (sem alterar o modo)
+
+/* ================= LOOP =================
+   PRMAX é o teto do perfil; no celular o escalonador também SOBE a resolução
+   quando sobra folga (fps alto), então um celular rápido não fica preso numa
+   imagem desfocada. No desktop o comportamento de apenas reduzir é o de
+   antes, intacto.                                                          */
+const PRMAX=Math.min(devicePixelRatio,Q.pr),PRMIN=COARSE?.6:1,PRSTEP=COARSE?.2:.25,PRCHK=COARSE?1.2:2;
 const clock=new THREE.Clock();let fa=0,fc=0;
 function collide(px,pz){for(const c of colliders)if(px>c.x0-.3&&px<c.x1+.3&&pz>c.z0-.3&&pz<c.z1+.3)return true;
  return px<G.x0+.6||px>G.x1-.6||pz<G.z0+.7||pz>G.z1-.6}
 const _qs2=new URLSearchParams(location.search);
 function loop(){const dt=Math.min(clock.getDelta(),.1);
- fa+=dt;fc++;if(fa>2){const fps=fc/fa;if(fps<32&&pr>1){pr=Math.max(.75,pr-.25);renderer.setPixelRatio(pr)}fa=fc=0}
+ fa+=dt;fc++;if(fa>PRCHK){const fps=fc/fa;
+  if(fps<32&&pr>PRMIN){pr=Math.max(PRMIN,pr-PRSTEP);renderer.setPixelRatio(pr)}
+  else if(COARSE&&fps>56&&pr<PRMAX){pr=Math.min(PRMAX,pr+.15);renderer.setPixelRatio(pr)}
+  fa=fc=0}
  roof.visible=cam.position.y<P.CH-.6;
  if(free){cam.position.set(free.p[0],free.p[1],free.p[2]);cam.lookAt(free.l[0],free.l[1],free.l[2])}
  else if(mode==='orbit'){const k=1-Math.pow(.0015,dt);O.t.lerp(tg.t,k);O.th+=(tg.th-O.th)*k;O.ph+=(tg.ph-O.ph)*k;O.r+=(tg.r-O.r)*k;
   const y=Math.max(.5,O.t.y+O.r*Math.cos(O.ph));cam.position.set(O.t.x+O.r*Math.sin(O.ph)*Math.sin(O.th),y,O.t.z+O.r*Math.sin(O.ph)*Math.cos(O.th));
   if(cam.position.y<.5)cam.position.y=.5;cam.lookAt(O.t)}
  else{let f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y,s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
-  const sp=(keys.ShiftLeft?5.2:2.4)*dt,fx=-Math.sin(W.yaw),fz=-Math.cos(W.yaw),rx=Math.cos(W.yaw),rz=-Math.sin(W.yaw);
+  const sp=((keys.ShiftLeft||run)?5.2:2.4)*dt,fx=-Math.sin(W.yaw),fz=-Math.cos(W.yaw),rx=Math.cos(W.yaw),rz=-Math.sin(W.yaw);
   const nx=W.p.x+(fx*f+rx*s)*sp,nz=W.p.z+(fz*f+rz*s)*sp;if(!collide(nx,W.p.z))W.p.x=nx;if(!collide(W.p.x,nz))W.p.z=nz;
   cam.position.copy(W.p);cam.rotation.set(W.pitch,W.yaw,0,'YXZ')}
  renderer.render(scene,cam);
  if(STILL&&++frames>=STILL)return;
  requestAnimationFrame(loop)}
+/* A cena é totalmente estática (nada se move, nada é animado), então no celular
+   o shadow map é desenhado UMA vez no primeiro quadro e reaproveitado, em vez
+   de redesenhar ~700 malhas a cada quadro.                                */
+if(COARSE){renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true}
 prog();
-setTimeout(()=>{const l=document.getElementById('load');l.style.opacity=0;setTimeout(()=>l.remove(),700)},900);
+/* No celular os shaders são compilados com a tela de carregamento ainda no ar.
+   Sem isso, o primeiro arraste paga a compilação e trava; aqui ela vira tempo
+   de carga, que é onde o usuário espera. A corrida com o timeout é para a tela
+   de loading nunca depender de uma promise do WebGL.                      */
+const reveal=()=>{const l=document.getElementById('load');l.style.opacity=0;setTimeout(()=>l.remove(),700)};
+if(COARSE&&renderer.compileAsync)
+  Promise.race([renderer.compileAsync(scene,cam).catch(()=>{}),new Promise(r=>setTimeout(r,6000))])
+    .then(()=>setTimeout(reveal,350));
+else setTimeout(reveal,900);
 loop();
 </script></body></html>
